@@ -1,0 +1,23 @@
+Link: https://data.stackexchange.com/stackoverflow/query/edit/1510845
+
+Query:
+### Distinct original questions and multiple duplicate questions tag with original questions
+
+SELECT 
+  DISTINCT TOP 10000 p.Id AS OId,
+  p.CreationDate,
+  p.Title as OTitle,
+  p.Body as OBody,
+  p.Tags as OTags,
+  pd.Id as DId,
+  pd.Title as DTitle,
+  pd.Body as DBody,
+  pd.Tags as DTags
+FROM PostHistory ph
+  JOIN Posts p ON p.Id = ph.PostId
+  JOIN Posts pd ON pd.Id = CAST(JSON_VALUE(ph.Text, '$.OriginalQuestionIds[0]') AS nvarchar)
+WHERE 
+  p.PostTypeId = 1 -- Question
+  AND ph.PostHistoryTypeId = 10 -- Close event
+  AND ph.Comment = 101 -- Dupe
+ ORDER BY pd.Id ASC
